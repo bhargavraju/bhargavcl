@@ -44,5 +44,3 @@ class MongoConnection:
         return MongoConnection._machines
 
 
-if __name__ == '__main__':
-    print(db_name, cluster_collection, machine_colletion)
