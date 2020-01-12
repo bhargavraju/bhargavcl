@@ -28,8 +28,7 @@ To run this project on your local
 * These 2 APIs consume request body as a json. The 'Content-Type' header should be set to 'application/json' in these cases.
 * As the scope of the application is pretty basic, the server may not cover all possibilities of wrong request data
 (although fundamental checks have been placed to advise the user on why his request data might be wrong)
-* The possible values of machine states are restricted to 'Running' and 'Terminated' as 'Rebooting' is not
-possible to effectively reproduce on a simple synchronous app as this
+* The possible values of machine states are restricted to 'Running' and 'Terminated'. "Rebooting" is not available
 
 ### Running test cases
 
