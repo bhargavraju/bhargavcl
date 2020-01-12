@@ -124,7 +124,3 @@ def modify_status_by_tags():
     else:
         change_machine_status_by_tags(cluster_id, tags, state)
         return "State modified for all machines with specified tags", 200
-
-
-if __name__ == "__main__":
-    app.run()
