@@ -1,12 +1,23 @@
 from db.mongo_conn import MongoConnection
 from models.machine import Machine, load_machine
-from fields import M_ID, CL_ID
+from fields import M_ID, CL_ID, M_NAME
 
 
 def get_machine_record(machine_id):
     machine_rec = MongoConnection().get_machine_collection().find_one(
         {M_ID: machine_id}
     )
+    if machine_rec is not None:
+        machine_rec.pop('_id')
+    return machine_rec
+
+
+def get_machine_record_by_name(cluster_id, name):
+    machine_rec = MongoConnection().get_machine_collection().find_one(
+        {CL_ID: cluster_id, M_NAME: name}
+    )
+    if machine_rec is not None:
+        machine_rec.pop('_id')
     return machine_rec
 
 
@@ -14,14 +25,26 @@ def get_machines_in_cluster(cluster_id):
     machine_recs = MongoConnection().get_machine_collection().find(
         {CL_ID: cluster_id}
     )
-    return machine_recs
+    result = []
+    for machine_rec in machine_recs:
+        machine_rec.pop('_id')
+        result.append(machine_rec)
+    return result
+
+
+def machine_with_name_in_cluster_exists(cluster_id, name):
+    rec = get_machine_record_by_name(cluster_id, name)
+    if rec is not None:
+        return True
+    else:
+        return False
 
 
 def create_machine(cluster_id, name, ip, instance_type, tags):
     new_machine = Machine(cluster_id, name, ip, instance_type, tags)
     machine_rec = new_machine.json()
     MongoConnection().get_machine_collection().insert_one(machine_rec)
-    return machine_rec
+    return new_machine.machine_id
 
 
 def delete_machine(machine_id):

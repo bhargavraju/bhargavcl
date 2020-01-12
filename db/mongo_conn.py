@@ -41,7 +41,7 @@ class MongoConnection:
 
     def get_machine_collection(self):
         self._create_machine_collection()
-        return MongoConnection._clusters
+        return MongoConnection._machines
 
 
 if __name__ == '__main__':
