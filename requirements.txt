@@ -6,3 +6,4 @@ Jinja2==2.10.3
 MarkupSafe==1.1.1
 pymongo[srv]==3.10.1
 Werkzeug==0.16.0
+pytest
