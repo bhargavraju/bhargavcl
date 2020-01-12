@@ -70,6 +70,21 @@ def get_machines_by_tags(cluster_id, tags):
     return match_machines
 
 
+def get_machines_by_state(cluster_id, state):
+    machine_recs = get_machines_in_cluster(cluster_id)
+    result = []
+    for machine_rec in machine_recs:
+        machine = load_machine(machine_rec)
+        if machine.state == state:
+            result.append(machine)
+    return result
+
+
+def return_machines_by_state(cluster_id, state):
+    machines = get_machines_by_state(cluster_id, state)
+    return [machine.json() for machine in machines]
+
+
 def modify_status(machine_id, state, machine_obj=None):
     if machine_obj is None:
         machine_rec = get_machine_record(machine_id)
@@ -88,10 +103,10 @@ def add_machine_tag(machine_id, tag):
     MongoConnection().get_machine_collection().replace_one({M_ID: machine_id}, machine.json())
 
 
-def remove_machine_tags(machine_id, tags):
+def remove_machine_tags(machine_id, tag):
     machine_rec = get_machine_record(machine_id)
     machine = load_machine(machine_rec)
-    machine.tags = [tag for tag in machine.tags if tag not in tags]
+    machine.tags = [mtag for mtag in machine.tags if mtag != tag]
     MongoConnection().get_machine_collection().replace_one({M_ID: machine_id}, machine.json())
 
 

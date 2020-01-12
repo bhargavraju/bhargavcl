@@ -2,7 +2,7 @@ from flask import Flask, request
 from db.cluster_data import create_cluster, get_cluster_by_name, delete_cluster, get_cluster_record, get_all_clusters
 from db.machine_data import create_machine, delete_machine, get_machine_record, modify_status, \
      change_machines_status, delete_machines_in_cluster, get_machines_in_cluster, change_machine_status_by_tags, \
-     machine_with_name_in_cluster_exists
+     machine_with_name_in_cluster_exists, return_machines_by_state
 from fields import M_ST_TERMINATED, M_ST_RUNNING
 app = Flask(__name__)
 
@@ -142,7 +142,7 @@ def modify_cluster_machines_state():
     if get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
     elif target_state not in (M_ST_RUNNING, M_ST_TERMINATED):
-        return "Target state provided is not a valid one", 400
+        return "Target state is not a valid one. Please enter one of: " + M_ST_RUNNING + ", " + M_ST_TERMINATED, 400
     else:
         change_machines_status(cluster_id, target_state)
         return "State of machines in the cluster changed successfully", 200
@@ -163,6 +163,24 @@ def get_cluster_machine_list():
         return {'machines': get_machines_in_cluster(cluster_id)}, 200
 
 
+@app.route('/cluster/machine/list/status', methods=['GET'])
+def get_cluster_machine_list():
+    """
+    Lists all machines of a cluster, in a particular state (Running/Terminated)
+
+    Request params: cluster_id: str, state: str
+    :return: List of machine records
+    """
+    cluster_id = request.args['cluster_id']
+    state = request.args['state']
+    if get_cluster_record(cluster_id) is None:
+        return "Cluster with specified id doesn't exist", 400
+    elif state not in (M_ST_TERMINATED, M_ST_RUNNING):
+        return "Target state is not a valid state. Please enter one of: " + M_ST_RUNNING + ", " + M_ST_TERMINATED, 400
+    else:
+        return {'machines': return_machines_by_state(cluster_id, state)}, 200
+
+
 @app.route('/machine/status', methods=['PUT'])
 def modify_machine_state():
     """
@@ -176,7 +194,7 @@ def modify_machine_state():
     if get_machine_record(machine_id) is None:
         return "Machine with specified id doesn't exist", 400
     elif state not in (M_ST_TERMINATED, M_ST_RUNNING):
-        return "Target state is not a valid state", 400
+        return "Target state is not a valid state. Please enter one of: " + M_ST_RUNNING + ", " + M_ST_TERMINATED, 400
     else:
         modify_status(machine_id, state)
         return "Machine state modified"
@@ -198,7 +216,7 @@ def modify_status_by_tags():
     if get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
     elif state not in (M_ST_TERMINATED, M_ST_RUNNING):
-        return "Target state is not a valid state", 400
+        return "Target state is not a valid state. Please enter one of: " + M_ST_RUNNING + ", " + M_ST_TERMINATED, 400
     else:
         change_machine_status_by_tags(cluster_id, tags, state)
         return "State modified for all machines with specified tags", 200
