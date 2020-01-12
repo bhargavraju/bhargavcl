@@ -1,9 +1,8 @@
 from pymongo import MongoClient
-import os
 
-db_name = os.environ.get('MONGO_DB_NAME', 'app_db')
-cluster_collection = os.environ.get('MONGO_CL_COLL', 'clusters')
-machine_colletion = os.environ.get('MONGO_M_COLL', 'machines')
+db_name = 'app_db'
+cluster_collection = 'clusters'
+machine_colletion = 'machines'
 
 
 class MongoConnection:
@@ -14,10 +13,8 @@ class MongoConnection:
 
     @classmethod
     def _connect_to_mongodb(cls):
-        client = MongoClient("localhost", 27017)
+        client = MongoClient("mongodb+srv://bhargav:bhargav@cluster0-0hnph.mongodb.net/test?retryWrites=true&w=majority")
         cls._client = client
-        # if mongo_auth_enabled:
-        #     cls._client.the_database.authenticate(mongo_user, mongo_password, source=self.mongo_auth_db)
 
     def _get_database(self):
         if MongoConnection._client is None:
