@@ -1,8 +1,5 @@
 from flask import Flask, request
-from db.cluster_data import create_cluster, get_cluster_by_name, delete_cluster, get_cluster_record, get_all_clusters
-from db.machine_data import create_machine, delete_machine, get_machine_record, modify_status, \
-     change_machines_status, delete_machines_in_cluster, get_machines_in_cluster, change_machine_status_by_tags, \
-     machine_with_name_in_cluster_exists, return_machines_by_state
+from db import cluster_data, machine_data
 from fields import M_ST_TERMINATED, M_ST_RUNNING
 app = Flask(__name__)
 
@@ -22,10 +19,10 @@ def create_new_cluster():
     """
     cluster_name = request.form['name']
     region = request.form['region']
-    if get_cluster_by_name(cluster_name) is not None:
+    if cluster_data.get_cluster_by_name(cluster_name) is not None:
         return "Cluster name already exists, please choose a new name", 409
     else:
-        cluster_id = create_cluster(cluster_name, region)
+        cluster_id = cluster_data.create_cluster(cluster_name, region)
         return 'Cluster created with cluster id: ' + cluster_id, 201
 
 
@@ -38,10 +35,10 @@ def get_cluster_details():
     :return: Cluster record
     """
     cluster_id = request.args['cluster_id']
-    if get_cluster_record(cluster_id) is None:
+    if cluster_data.get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
     else:
-        cluster_record = get_cluster_record(cluster_id)
+        cluster_record = cluster_data.get_cluster_record(cluster_id)
         return cluster_record, 200
 
 
@@ -52,7 +49,7 @@ def get_all_cluster_details():
 
     :return: List of cluster records
     """
-    cluster_recs = get_all_clusters()
+    cluster_recs = cluster_data.get_all_clusters()
     return {'clusters': cluster_recs}, 200
 
 
@@ -65,11 +62,11 @@ def delete_existing_cluster():
     :return:
     """
     cluster_id = request.args['cluster_id']
-    if get_cluster_record(cluster_id) is None:
+    if cluster_data.get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
     else:
-        delete_cluster(cluster_id)
-        delete_machines_in_cluster(cluster_id)
+        cluster_data.delete_cluster(cluster_id)
+        machine_data.delete_machines_in_cluster(cluster_id)
         return "Cluster deleted", 200
 
 
@@ -88,12 +85,12 @@ def add_machine_to_cluster():
     ip = inputs['ip']
     instance_type = inputs['instance_type']
     tags = inputs.get('tags', None)
-    if get_cluster_record(cluster_id) is None:
+    if cluster_data.get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
-    elif machine_with_name_in_cluster_exists(cluster_id, name):
+    elif machine_data.machine_with_name_in_cluster_exists(cluster_id, name):
         return "This cluster already has a machine with the provided name", 409
     else:
-        machine_id = create_machine(cluster_id, name, ip, instance_type, tags)
+        machine_id = machine_data.create_machine(cluster_id, name, ip, instance_type, tags)
         return 'Machine created with machine id: ' + machine_id, 201
 
 
@@ -106,10 +103,10 @@ def get_machine_details():
     :return: Cluster record
     """
     machine_id = request.args['machine_id']
-    if get_machine_record(machine_id) is None:
+    if machine_data.get_machine_record(machine_id) is None:
         return "Machine with specified id doesn't exist", 400
     else:
-        machine_record = get_machine_record(machine_id)
+        machine_record = machine_data.get_machine_record(machine_id)
         return machine_record, 200
 
 
@@ -122,10 +119,10 @@ def remove_machine_from_cluster():
     :return:
     """
     machine_id = request.args['machine_id']
-    if get_machine_record(machine_id) is None:
+    if machine_data.get_machine_record(machine_id) is None:
         return "Machine with specified id doesn't exist", 400
     else:
-        delete_machine(machine_id)
+        machine_data.delete_machine(machine_id)
         return "Machine removed successfully", 200
 
 
@@ -139,12 +136,12 @@ def modify_cluster_machines_state():
     """
     cluster_id = request.form['cluster_id']
     target_state = request.form['state']
-    if get_cluster_record(cluster_id) is None:
+    if cluster_data.get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
     elif target_state not in (M_ST_RUNNING, M_ST_TERMINATED):
         return "Target state is not a valid one. Please enter one of: " + M_ST_RUNNING + ", " + M_ST_TERMINATED, 400
     else:
-        change_machines_status(cluster_id, target_state)
+        machine_data.change_machines_status(cluster_id, target_state)
         return "State of machines in the cluster changed successfully", 200
 
 
@@ -157,14 +154,14 @@ def get_cluster_machine_list():
     :return: List of machine records
     """
     cluster_id = request.args['cluster_id']
-    if get_cluster_record(cluster_id) is None:
+    if cluster_data.get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
     else:
-        return {'machines': get_machines_in_cluster(cluster_id)}, 200
+        return {'machines': machine_data.get_machines_in_cluster(cluster_id)}, 200
 
 
 @app.route('/cluster/machine/list/status', methods=['GET'])
-def get_cluster_machine_list():
+def get_cluster_machine_list_by_status():
     """
     Lists all machines of a cluster, in a particular state (Running/Terminated)
 
@@ -173,12 +170,12 @@ def get_cluster_machine_list():
     """
     cluster_id = request.args['cluster_id']
     state = request.args['state']
-    if get_cluster_record(cluster_id) is None:
+    if cluster_data.get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
     elif state not in (M_ST_TERMINATED, M_ST_RUNNING):
         return "Target state is not a valid state. Please enter one of: " + M_ST_RUNNING + ", " + M_ST_TERMINATED, 400
     else:
-        return {'machines': return_machines_by_state(cluster_id, state)}, 200
+        return {'machines': machine_data.return_machines_by_state(cluster_id, state)}, 200
 
 
 @app.route('/machine/status', methods=['PUT'])
@@ -191,12 +188,12 @@ def modify_machine_state():
     """
     machine_id = request.form['machine_id']
     state = request.form['state']
-    if get_machine_record(machine_id) is None:
+    if machine_data.get_machine_record(machine_id) is None:
         return "Machine with specified id doesn't exist", 400
     elif state not in (M_ST_TERMINATED, M_ST_RUNNING):
         return "Target state is not a valid state. Please enter one of: " + M_ST_RUNNING + ", " + M_ST_TERMINATED, 400
     else:
-        modify_status(machine_id, state)
+        machine_data.modify_status(machine_id, state)
         return "Machine state modified"
 
 
@@ -213,12 +210,12 @@ def modify_status_by_tags():
     cluster_id = inputs['cluster_id']
     tags = inputs['tags']
     state = inputs['state']
-    if get_cluster_record(cluster_id) is None:
+    if cluster_data.get_cluster_record(cluster_id) is None:
         return "Cluster with specified id doesn't exist", 400
     elif state not in (M_ST_TERMINATED, M_ST_RUNNING):
         return "Target state is not a valid state. Please enter one of: " + M_ST_RUNNING + ", " + M_ST_TERMINATED, 400
     else:
-        change_machine_status_by_tags(cluster_id, tags, state)
+        machine_data.change_machine_status_by_tags(cluster_id, tags, state)
         return "State modified for all machines with specified tags", 200
 
 
