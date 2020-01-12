@@ -1,8 +1,10 @@
 from pymongo import MongoClient
+import os
 
-db_name = 'app_db'
-cluster_collection = 'clusters'
-machine_colletion = 'machines'
+db_name = os.environ.get('DB_NAME', 'app_db')
+cluster_collection = os.environ.get('CL_COLL', 'clusters')
+machine_colletion = os.environ.get('M_COLL', 'machines')
+mongo_URI = os.environ.get("MONGO_URI", 'mongodb://localhost:27017')
 
 
 class MongoConnection:
@@ -13,7 +15,7 @@ class MongoConnection:
 
     @classmethod
     def _connect_to_mongodb(cls):
-        client = MongoClient("mongodb+srv://bhargav:bhargav@cluster0-0hnph.mongodb.net/test?retryWrites=true&w=majority")
+        client = MongoClient(mongo_URI)
         cls._client = client
 
     def _get_database(self):
