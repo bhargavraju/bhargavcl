@@ -30,4 +30,8 @@ To run this project on your local
 (although fundamental checks have been placed to advise the user on why his request data might be wrong)
 * The possible values of machine states are restricted to 'Running' and 'Terminated' as 'Rebooting' is not
 possible to effectively reproduce on a simple synchronous app as this
+
+### Running test cases
+
 * All test cases are present in the 'test' module
+* run the command 'pytest' in the root folder to run the test cases
